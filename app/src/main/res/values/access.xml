@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="intra_uid">165ea7a7f039790dcc5fb2943d99e299815a50d5348d38a6c91287944b032ebc</string>
+  <string name="intra_secret">3605a0bb4826b644d4a13a5cd78c2672349719bc6b4daffb8c47208428a54fe1</string>
+  <string name="intra_base_url">https://api.intra.42.fr/v2/</string>
+</resources>

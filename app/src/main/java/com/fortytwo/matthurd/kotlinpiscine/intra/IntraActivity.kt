@@ -6,10 +6,14 @@ import android.widget.*
 import butterknife.BindView
 import butterknife.ButterKnife
 import butterknife.OnClick
+import com.fortytwo.matthurd.kotlinpiscine.PiscineApplication
 import com.fortytwo.matthurd.kotlinpiscine.R
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
+import javax.inject.Inject
 
 class IntraActivity : AppCompatActivity() {
 
+    @Inject lateinit var mIntraApiServer: IntraApiServer
 
     @BindView(R.id.search_intra_login) lateinit var nameField: EditText
     @BindView(R.id.search_button) lateinit var searchButton: Button
@@ -24,6 +28,7 @@ class IntraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_intra)
         ButterKnife.bind(this)
+        (application as PiscineApplication).piscineComponent.inject(this)
     }
 
     @OnClick(R.id.search_intra_login)
