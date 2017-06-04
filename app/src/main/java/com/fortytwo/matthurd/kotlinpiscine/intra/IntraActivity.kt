@@ -9,6 +9,9 @@ import butterknife.OnClick
 import com.fortytwo.matthurd.kotlinpiscine.PiscineApplication
 import com.fortytwo.matthurd.kotlinpiscine.R
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraUser
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class IntraActivity : AppCompatActivity() {
@@ -33,5 +36,18 @@ class IntraActivity : AppCompatActivity() {
 
     @OnClick(R.id.search_intra_login)
     fun searchForUser() {
+        mIntraApiServer
+                .apiServer
+                .getUser("mhurd")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(
+                        {
+                            intraUser -> setUserData(intraUser)
+                        })
+    }
+
+    fun setUserData(user: IntraUser) {
+        userName.text = user.displayname
     }
 }
