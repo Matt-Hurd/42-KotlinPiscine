@@ -6,7 +6,6 @@ import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
-
 @Module
 class IntraApiModule(internal var config: IntraApiServerConfig) {
     @Provides

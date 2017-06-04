@@ -10,7 +10,6 @@ import butterknife.OnClick
 import com.fortytwo.matthurd.kotlinpiscine.calculatorV1.CalculatorActivity
 import com.fortytwo.matthurd.kotlinpiscine.intra.IntraActivity
 
-
 class WelcomeActivity : AppCompatActivity() {
 
     @BindView(R.id.welcome_text_view) lateinit var textView: TextView

@@ -57,7 +57,7 @@ class CalculatorV1 {
 
     fun pressedDigit(digit: Int): Double {
         holdingValue = when (decimal) {
-            true  -> {
+            true -> {
                 decimals += 1
                 holdingValue + digit.toDouble() / pow(10.0, decimals.toDouble()).toDouble() }
             false -> holdingValue * 10 + digit

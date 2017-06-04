@@ -1,7 +1,6 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import android.util.Log
-import io.reactivex.Completable
 import io.reactivex.rxkotlin.blockingSubscribeBy
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
@@ -14,7 +13,6 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.io.IOException
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-
 
 val AUTHORIZATION = "access_token"
 
@@ -55,7 +53,7 @@ class IntraTokenAuthenticator(var config: IntraApiServerConfig, var intraAuthSer
                 .authenticate(params)
                 .blockingSubscribeBy(
                         onError = { throwable -> Log.e("Auth", "Authentication failed: " + throwable.message) },
-                        onNext = {intraAccessToken -> newToken = intraAccessToken })
+                        onNext = { intraAccessToken -> newToken = intraAccessToken })
 
         Log.i("AccessToken", newToken?.tokenType + " " + newToken?.accessToken)
         return response.request().newBuilder()
