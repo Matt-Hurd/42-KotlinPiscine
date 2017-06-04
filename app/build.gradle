@@ -48,6 +48,7 @@ dependencies {
     compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
     compile 'com.google.dagger:dagger:2.10'
     compile 'com.squareup.retrofit2:converter-jackson:2.2.0'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 
     kapt 'com.google.dagger:dagger-compiler:2.10'
     kapt "com.jakewharton:butterknife-compiler:$butterknife_version"
