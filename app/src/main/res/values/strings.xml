@@ -1,0 +1,5 @@
+<resources>
+  <string name="app_name">Kotlin Piscine</string>
+  <string name="search">Search</string>
+  <string name="enter_an_intra_login_name">Enter an intra login name</string>
+</resources>

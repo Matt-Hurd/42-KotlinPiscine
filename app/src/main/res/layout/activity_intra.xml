@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+  <EditText
+    android:id="@+id/search_intra_login"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentStart="true"
+    android:layout_alignParentTop="true"
+    android:ems="10"
+    android:inputType="textPersonName"
+    android:hint="@string/enter_an_intra_login_name" />
+  <Button
+    android:id="@+id/button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentEnd="true"
+    android:layout_toEndOf="@id/search_intra_login"
+    android:text="@string/search"
+    android:textSize="12sp"/>
+  <ImageView
+    android:id="@+id/user_image"
+    android:layout_width="100dp"
+    android:layout_height="100dp"
+    android:layout_below="@id/search_intra_login"
+    android:layout_alignParentStart="true"
+    android:visibility="gone"
+    app:srcCompat="@android:color/darker_gray" />
+  <TextView
+    android:id="@+id/text_intra_name"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_toEndOf="@id/user_image"
+    android:layout_below="@id/search_intra_login"
+    tools:text="Matthew Hurd - mhurd"
+    android:padding="3dp"
+    android:visibility="gone"/>
+
+  <TextView
+    android:id="@+id/text_wallet"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_toEndOf="@id/user_image"
+    android:layout_below="@id/text_intra_name"
+    tools:text="Wallet: 45₳"
+    android:padding="3dp"
+    android:visibility="gone"/>
+
+  <TextView
+    android:id="@+id/text_correction_points"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_toEndOf="@id/user_image"
+    android:layout_below="@id/text_wallet"
+    tools:text="Correction points: 6"
+    android:padding="3dp"
+    android:visibility="gone"/>
+  <ProgressBar
+    android:id="@+id/level_progress"
+    style="?android:attr/progressBarStyleHorizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/text_correction_points"
+    android:layout_toEndOf="@id/user_image"
+    android:max="100"
+    android:visibility="gone"
+    tools:progress="75"
+    android:padding="10dp"/>
+  <android.support.v7.widget.RecyclerView
+    android:id="@+id/projects_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_below="@id/level_progress"
+    android:visibility="gone">
+
+  </android.support.v7.widget.RecyclerView>
+</RelativeLayout>
