@@ -1,8 +1,10 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.io.Serializable
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class IntraUser(
         @JsonProperty("id") var id: Int = 0,
         @JsonProperty("email") var email: String? = null,

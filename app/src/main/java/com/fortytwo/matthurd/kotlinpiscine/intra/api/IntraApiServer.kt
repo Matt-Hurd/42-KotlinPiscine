@@ -2,6 +2,7 @@ package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import android.util.Log
 import io.reactivex.Completable
+import io.reactivex.rxkotlin.blockingSubscribeBy
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
 import io.reactivex.schedulers.Schedulers
@@ -22,45 +23,46 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
 
     init {
         val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
-        val retrofitBuilder = Retrofit.Builder()
+        var okHttpClient = OkHttpClient()
+                .newBuilder()
+                .readTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
+        if (authEnabled) {
+            okHttpClient
+                    .authenticator(
+                            IntraTokenAuthenticator(config,
+                                    IntraApiServer(config, false)
+                            ))
+        }
+        apiServer = Retrofit.Builder()
                 .baseUrl(config.baseUrl)
                 .addConverterFactory(JacksonConverterFactory.create())
                 .addCallAdapterFactory(rxAdapter)
-        if (authEnabled) {
-            retrofitBuilder.client(
-                    OkHttpClient()
-                            .newBuilder()
-                            .authenticator(
-                                    IntraTokenAuthenticator(config,
-                                            IntraApiServer(config, false)
-                                    ))
-                            .readTimeout(5, TimeUnit.SECONDS)
-                            .connectTimeout(5, TimeUnit.SECONDS)
-                            .build())
-        }
-        apiServer = retrofitBuilder.build().create(IntraApiEndpoint::class.java)
+                .client(okHttpClient.build())
+                .build()
+                .create(IntraApiEndpoint::class.java)
     }
 }
 
 class IntraTokenAuthenticator(var config: IntraApiServerConfig, var intraAuthServer: IntraApiServer) : Authenticator {
     @Throws(IOException::class)
     override fun authenticate(route: Route, response: Response): Request {
-        val params = mapOf(Pair("client_id", config.uid), Pair("client_secret", config.secret))
-        var newToken = intraAuthServer
+        Log.w("a", "we making this")
+        val params = mapOf("grant_type" to "client_credentials", "client_id" to config.uid, "client_secret" to config.secret)
+        var newToken: IntraAccessToken? = null
+        intraAuthServer
                 .apiServer
                 .authenticate(params)
-                .doOnError(
-                        {
-                            Log.e("Auth", "Authentication failed")
-                        }
-                )
-                .blockingFirst()
-        Log.i("ayy", newToken.tokenType + " " + newToken.accessToken)
+                .blockingSubscribeBy(
+                        onError = { throwable -> Log.e("Auth", "Authentication failed: " + throwable.message) },
+                        onNext = {intraAccessToken -> newToken = intraAccessToken })
+
+        Log.i("AccessToken", newToken?.tokenType + " " + newToken?.accessToken)
         return response.request().newBuilder()
-                .header("Authorization", newToken.tokenType + " " + newToken.accessToken)
+                .header("Authorization", newToken?.tokenType + " " + newToken?.accessToken)
                 .header("Users-Agent", "GuessWho")
                 .header("Accept", "application/json")
-                .build();
+                .build()
 
     }
 }

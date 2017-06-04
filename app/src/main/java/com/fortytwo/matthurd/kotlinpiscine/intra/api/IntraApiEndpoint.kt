@@ -9,9 +9,9 @@ import retrofit2.http.Path
 
 interface IntraApiEndpoint {
 
-    @GET("users/{id}")
-    fun getUser(@Path("username") username: String): Flowable<IntraUser>
-
     @POST("oauth/token")
-    fun authenticate(@Body params: Map<String, Any>): Flowable<IntraAccessToken>
+    fun authenticate(@Body params: Map<String, String>): Flowable<IntraAccessToken>
+
+    @GET("v2/users/{id}")
+    fun getUser(@Path("id") id: String): Flowable<IntraUser>
 }

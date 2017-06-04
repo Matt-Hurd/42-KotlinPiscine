@@ -2,6 +2,8 @@ package com.fortytwo.matthurd.kotlinpiscine.intra
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.*
 import butterknife.BindView
 import butterknife.ButterKnife
@@ -10,7 +12,9 @@ import com.fortytwo.matthurd.kotlinpiscine.PiscineApplication
 import com.fortytwo.matthurd.kotlinpiscine.R
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraUser
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -34,20 +38,22 @@ class IntraActivity : AppCompatActivity() {
         (application as PiscineApplication).piscineComponent.inject(this)
     }
 
-    @OnClick(R.id.search_intra_login)
+    @OnClick(R.id.search_button)
     fun searchForUser() {
         mIntraApiServer
                 .apiServer
-                .getUser("mhurd")
+                .getUser(nameField.text.toString())
+                .doOnError { throwable -> Log.w("retrofit", throwable.message) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(
-                        {
-                            intraUser -> setUserData(intraUser)
-                        })
+                .subscribeBy(
+                        onError = { throwable -> Log.w("retrofit", throwable.message) },
+                        onNext = { userData -> setUserData(userData) })
     }
+
 
     fun setUserData(user: IntraUser) {
         userName.text = user.displayname
+        userName.visibility = View.VISIBLE
     }
 }
