@@ -1,5 +1,7 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraAccessToken
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
 import io.reactivex.Flowable
 import retrofit2.http.Body
 import retrofit2.http.GET

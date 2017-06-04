@@ -1,6 +1,7 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import android.util.Log
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraAccessToken
 import io.reactivex.rxkotlin.blockingSubscribeBy
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
@@ -13,25 +14,23 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.io.IOException
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-
-val AUTHORIZATION = "access_token"
+import okhttp3.logging.HttpLoggingInterceptor
 
 class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) {
     var apiServer: IntraApiEndpoint
 
     init {
-        val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BASIC
         var okHttpClient = OkHttpClient()
                 .newBuilder()
                 .readTimeout(5, TimeUnit.SECONDS)
                 .connectTimeout(5, TimeUnit.SECONDS)
+                .addInterceptor(interceptor)
         if (authEnabled) {
-            okHttpClient
-                    .authenticator(
-                            IntraTokenAuthenticator(config,
-                                    IntraApiServer(config, false)
-                            ))
+            okHttpClient.authenticator(IntraTokenAuthenticator(config, IntraApiServer(config, false)))
         }
+        val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
         apiServer = Retrofit.Builder()
                 .baseUrl(config.baseUrl)
                 .addConverterFactory(JacksonConverterFactory.create())
@@ -45,8 +44,10 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
 class IntraTokenAuthenticator(var config: IntraApiServerConfig, var intraAuthServer: IntraApiServer) : Authenticator {
     @Throws(IOException::class)
     override fun authenticate(route: Route, response: Response): Request {
-        Log.w("a", "we making this")
-        val params = mapOf("grant_type" to "client_credentials", "client_id" to config.uid, "client_secret" to config.secret)
+        val params = mapOf(
+                "grant_type" to "client_credentials",
+                "client_id" to config.uid,
+                "client_secret" to config.secret)
         var newToken: IntraAccessToken? = null
         intraAuthServer
                 .apiServer
@@ -55,7 +56,6 @@ class IntraTokenAuthenticator(var config: IntraApiServerConfig, var intraAuthSer
                         onError = { throwable -> Log.e("Auth", "Authentication failed: " + throwable.message) },
                         onNext = { intraAccessToken -> newToken = intraAccessToken })
 
-        Log.i("AccessToken", newToken?.tokenType + " " + newToken?.accessToken)
         return response.request().newBuilder()
                 .header("Authorization", newToken?.tokenType + " " + newToken?.accessToken)
                 .header("Users-Agent", "GuessWho")

@@ -40,7 +40,10 @@ class IntraActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(
-                        onError = { throwable -> Log.w("retrofit", throwable.message) },
+                        onError = { throwable ->
+                            Log.w("retrofit", throwable)
+                            userCard.handleInvalidUser()
+                        },
                         onNext = { userData -> userCard.setUserData(userData) })
     }
 }

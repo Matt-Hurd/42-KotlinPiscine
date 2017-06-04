@@ -10,7 +10,7 @@ import android.widget.TextView
 import butterknife.BindView
 import butterknife.ButterKnife
 import com.fortytwo.matthurd.kotlinpiscine.R
-import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraUser
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
 import com.squareup.picasso.Picasso
 
 class IntraUserCard : RelativeLayout {
@@ -34,13 +34,21 @@ class IntraUserCard : RelativeLayout {
     fun setUserData(user: IntraUser) {
         this.visibility = View.VISIBLE
         userName.text = user.displayname
+        userWallet.text = resources.getString(R.string.wallet_points, user.wallet)
+        userCorrection.text = resources.getString(R.string.correction_points, user.correctionPoint)
         Picasso.
                 with(context).
-                load(user.imageUrl).
-                into(userImage)
+                load(user.imageUrl)
+                .placeholder(R.drawable.abc_btn_check_material)
+                .into(userImage)
+        val cursus = user.cursusUsers?.filter {
+            intraCursusUser ->
+            intraCursusUser?.cursusId == 1.toLong()
+        }?.first()
+        userLevel.text = resources.getString(R.string.level, cursus?.level ?: 0.0)
+        userProgress.progress = cursus?.level?.times(100)?.rem(100)?.toInt() ?: 0
     }
 
     fun handleInvalidUser() {
-
     }
 }
