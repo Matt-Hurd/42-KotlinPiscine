@@ -1,7 +1,6 @@
 package com.fortytwo.matthurd.kotlinpiscine
 
-import android.app.Application;
-import android.content.Context
+import android.app.Application
 import com.fortytwo.matthurd.kotlinpiscine.dagger.DaggerPiscineComponent
 import com.fortytwo.matthurd.kotlinpiscine.dagger.PiscineComponent
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServerConfig
@@ -20,9 +19,9 @@ class PiscineApplication : Application() {
 
     private fun createIntraApiServerConfig(): IntraApiServerConfig {
         return IntraApiServerConfig(
-                resources.getString(R.string.intra_base_url),
-                resources.getString(R.string.intra_uid),
-                resources.getString(R.string.intra_secret)
+                getString(R.string.intra_base_url),
+                getString(R.string.intra_uid),
+                getString(R.string.intra_secret)
         )
     }
 
