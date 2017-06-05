@@ -23,8 +23,8 @@ open class IntraUser(
         var location: String? = null,
         var wallet: Int? = null,
         var cursusUsers: RealmList<IntraCursusUser?>? = null,
+        var projectsUsers: RealmList<IntraProjectUser?>? = null,
         @Ignore var groups: List<Any?>? = null,
-        @Ignore var projectsUsers: List<Any?>? = null,
         @Ignore var languagesUsers: List<Any?>? = null,
         @Ignore var achievements: List<Any?>? = null,
         @Ignore var titles: List<Any?>? = null,
@@ -35,6 +35,6 @@ open class IntraUser(
         @Ignore var campus: List<Any?>? = null
 ) : Serializable, RealmObject() {
     companion object {
-        private const val serialVersionUID = 2L
+        private const val serialVersionUID = 3L
     }
 }

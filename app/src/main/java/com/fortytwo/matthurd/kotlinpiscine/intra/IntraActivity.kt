@@ -11,6 +11,8 @@ import butterknife.OnClick
 import com.fortytwo.matthurd.kotlinpiscine.PiscineApplication
 import com.fortytwo.matthurd.kotlinpiscine.R
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraProject
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraProjectUser
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -41,9 +43,9 @@ class IntraActivity : AppCompatActivity() {
                 .findFirst()
 
         if (userData != null) {
+            loadProjects(userData)
             userCard.setUserData(userData)
-        }
-        else {
+        } else {
             mIntraApiServer
                     .apiServer
                     .getUser(nameField.text.toString())
@@ -61,7 +63,51 @@ class IntraActivity : AppCompatActivity() {
                                 mIntraApiServer.realm.copyToRealmOrUpdate(userData)
                                 mIntraApiServer.realm.commitTransaction()
                                 userCard.setUserData(userData)
+                                loadProjects(userData)
                             })
         }
+    }
+
+    fun loadProjects(intraUser: IntraUser) {
+        intraUser.projectsUsers
+                ?.filterNotNull()
+                ?.forEach { projectUser -> loadProject(projectUser) }
+    }
+
+    fun loadProject(intraProjectUser: IntraProjectUser)
+    {
+        if (intraProjectUser.project == null)
+            return
+        val projectData = mIntraApiServer
+                .realm
+                .where(IntraProject::class.java)
+                .equalTo("id", intraProjectUser.project?.id )
+                .findFirst()
+
+        if (projectData != null && projectData.tier != null) {
+            Log.i("ayy cache", projectData.name)
+            return //saved
+        } else {
+            mIntraApiServer
+                    .apiServer
+                    .getProject(intraProjectUser.project?.id ?: -1)
+                    .doOnError { throwable -> Log.w("retrofit", throwable.message) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeBy(
+                            onError = { throwable ->
+                                Log.w("retrofit", throwable)
+                                userCard.handleInvalidUser()
+                            },
+                            onNext = {
+                                projectData ->
+                                mIntraApiServer.realm.beginTransaction()
+                                mIntraApiServer.realm.copyToRealmOrUpdate(projectData.first())
+                                mIntraApiServer.realm.commitTransaction()
+                                Log.i("ayy", projectData.first().name) //we loaded it
+                            })
+        }
+
+
     }
 }

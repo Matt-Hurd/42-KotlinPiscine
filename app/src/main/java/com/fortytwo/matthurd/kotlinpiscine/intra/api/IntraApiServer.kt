@@ -28,7 +28,7 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
 
     init {
         val interceptor = HttpLoggingInterceptor()
-        interceptor.level = HttpLoggingInterceptor.Level.BASIC
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
         val okHttpClient = OkHttpClient()
                 .newBuilder()
                 .readTimeout(5, TimeUnit.SECONDS)

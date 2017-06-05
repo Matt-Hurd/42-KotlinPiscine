@@ -1,6 +1,7 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraAccessToken
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraProject
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
 import io.reactivex.Flowable
 import retrofit2.http.Body
@@ -15,4 +16,7 @@ interface IntraApiEndpoint {
 
     @GET("v2/users/{id}")
     fun getUser(@Path("id") id: String): Flowable<IntraUser>
+
+    @GET("v2/projects/{id}/projects")
+    fun getProject(@Path("id") id: Int): Flowable<List<IntraProject>>
 }
