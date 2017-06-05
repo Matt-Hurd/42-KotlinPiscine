@@ -1,16 +1,17 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api.models
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.realm.RealmObject
 import java.io.Serializable
 
-data class IntraAccessToken(
-        @JsonProperty("access_token") var accessToken: String,
-        @JsonProperty("created_at") var createdAt: Long,
-        @JsonProperty("expires_in") var expiresIn: Long,
-        @JsonProperty("scope") var scope: String,
-        @JsonProperty("token_type") var tokenType: String)
-    : Serializable {
+open class IntraAccessToken(
+        var accessToken: String? = null,
+        var createdAt: Long? = null,
+        var expiresIn: Long? = null,
+        var scope: String? = null,
+        var tokenType: String? = null
+)
+    : Serializable, RealmObject() {
     companion object {
-        private const val serialVersionUID = 1L
+        private const val serialVersionUID = 2L
     }
 }

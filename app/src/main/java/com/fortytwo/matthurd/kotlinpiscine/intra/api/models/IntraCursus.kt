@@ -1,15 +1,15 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api.models
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.realm.RealmObject
 import java.io.Serializable
 
-data class IntraCursus(
-        @JsonProperty("created_at") var createdAt: String,
-        @JsonProperty("id") var id: Long,
-        @JsonProperty("name") var name: String,
-        @JsonProperty("slug") var slug: String
-) : Serializable {
+open class IntraCursus(
+         var createdAt: String? = null,
+         var id: Long? = null,
+         var name: String? = null,
+         var slug: String? = null
+) : Serializable, RealmObject() {
     companion object {
-        private const val serialVersionUID = 1L
+        private const val serialVersionUID = 2L
     }
 }

@@ -5,6 +5,7 @@ import com.fortytwo.matthurd.kotlinpiscine.dagger.DaggerPiscineComponent
 import com.fortytwo.matthurd.kotlinpiscine.dagger.PiscineComponent
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServerConfig
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.dagger.IntraApiModule
+import io.realm.Realm
 
 class PiscineApplication : Application() {
 
@@ -12,6 +13,7 @@ class PiscineApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Realm.init(this)
         piscineComponent = DaggerPiscineComponent.builder()
                 .intraApiModule(IntraApiModule(createIntraApiServerConfig()))
                 .build()

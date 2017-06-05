@@ -11,6 +11,7 @@ import butterknife.OnClick
 import com.fortytwo.matthurd.kotlinpiscine.PiscineApplication
 import com.fortytwo.matthurd.kotlinpiscine.R
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
+import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -33,17 +34,34 @@ class IntraActivity : AppCompatActivity() {
 
     @OnClick(R.id.search_button)
     fun searchForUser() {
-        mIntraApiServer
-                .apiServer
-                .getUser(nameField.text.toString())
-                .doOnError { throwable -> Log.w("retrofit", throwable.message) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeBy(
-                        onError = { throwable ->
-                            Log.w("retrofit", throwable)
-                            userCard.handleInvalidUser()
-                        },
-                        onNext = { userData -> userCard.setUserData(userData) })
+        val userData = mIntraApiServer
+                .realm
+                .where(IntraUser::class.java)
+                .equalTo("login", nameField.text.toString())
+                .findFirst()
+
+        if (userData != null) {
+            userCard.setUserData(userData)
+        }
+        else {
+            mIntraApiServer
+                    .apiServer
+                    .getUser(nameField.text.toString())
+                    .doOnError { throwable -> Log.w("retrofit", throwable.message) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeBy(
+                            onError = { throwable ->
+                                Log.w("retrofit", throwable)
+                                userCard.handleInvalidUser()
+                            },
+                            onNext = {
+                                userData ->
+                                mIntraApiServer.realm.beginTransaction()
+                                mIntraApiServer.realm.copyToRealmOrUpdate(userData)
+                                mIntraApiServer.realm.commitTransaction()
+                                userCard.setUserData(userData)
+                            })
+        }
     }
 }

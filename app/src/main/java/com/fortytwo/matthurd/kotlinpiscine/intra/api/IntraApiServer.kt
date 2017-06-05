@@ -2,10 +2,15 @@ package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import android.util.Log
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraAccessToken
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import io.reactivex.rxkotlin.blockingSubscribeBy
 import retrofit2.Retrofit
-import retrofit2.converter.jackson.JacksonConverterFactory
 import io.reactivex.schedulers.Schedulers
+import io.realm.Realm
+import io.realm.RealmObject
 import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
@@ -15,14 +20,16 @@ import java.io.IOException
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.converter.gson.GsonConverterFactory
 
 class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) {
     var apiServer: IntraApiEndpoint
+    var realm: Realm = Realm.getDefaultInstance()
 
     init {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BASIC
-        var okHttpClient = OkHttpClient()
+        val okHttpClient = OkHttpClient()
                 .newBuilder()
                 .readTimeout(5, TimeUnit.SECONDS)
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -31,9 +38,20 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
             okHttpClient.authenticator(IntraTokenAuthenticator(config, IntraApiServer(config, false)))
         }
         val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
+        val gson = GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setExclusionStrategies(object : ExclusionStrategy {
+            override fun shouldSkipField(f: FieldAttributes): Boolean {
+                return f.declaringClass == RealmObject::class.java
+            }
+
+            override fun shouldSkipClass(clazz: Class<*>?): Boolean {
+                return false
+            }
+        }).create()
         apiServer = Retrofit.Builder()
                 .baseUrl(config.baseUrl)
-                .addConverterFactory(JacksonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(rxAdapter)
                 .client(okHttpClient.build())
                 .build()
@@ -54,7 +72,10 @@ class IntraTokenAuthenticator(var config: IntraApiServerConfig, var intraAuthSer
                 .authenticate(params)
                 .blockingSubscribeBy(
                         onError = { throwable -> Log.e("Auth", "Authentication failed: " + throwable.message) },
-                        onNext = { intraAccessToken -> newToken = intraAccessToken })
+                        onNext = {
+                            intraAccessToken ->
+                            newToken = intraAccessToken
+                        })
 
         return response.request().newBuilder()
                 .header("Authorization", newToken?.tokenType + " " + newToken?.accessToken)
