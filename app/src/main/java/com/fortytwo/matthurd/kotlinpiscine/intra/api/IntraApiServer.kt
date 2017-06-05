@@ -15,20 +15,24 @@ import java.io.IOException
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import okhttp3.logging.HttpLoggingInterceptor
+import android.arch.persistence.room.Room
+import android.content.Context
 
-class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) {
+
+class IntraApiServer(config: IntraApiServerConfig, context: Context, authEnabled: Boolean = true) {
     var apiServer: IntraApiEndpoint
+    var database: IntraApiDatabase
 
     init {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BASIC
-        var okHttpClient = OkHttpClient()
+        val okHttpClient = OkHttpClient()
                 .newBuilder()
                 .readTimeout(5, TimeUnit.SECONDS)
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .addInterceptor(interceptor)
         if (authEnabled) {
-            okHttpClient.authenticator(IntraTokenAuthenticator(config, IntraApiServer(config, false)))
+            okHttpClient.authenticator(IntraTokenAuthenticator(config, IntraApiServer(config, context, false)))
         }
         val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
         apiServer = Retrofit.Builder()
@@ -38,6 +42,8 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
                 .client(okHttpClient.build())
                 .build()
                 .create(IntraApiEndpoint::class.java)
+        database = Room.databaseBuilder(context,
+                IntraApiDatabase::class.java, "intra").build()
     }
 }
 

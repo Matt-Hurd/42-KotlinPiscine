@@ -14,6 +14,13 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation":
+                                     "$projectDir/schemas".toString()]
+            }
+        }
+
     }
     packagingOptions {
         exclude 'META-INF/NOTICE'
@@ -29,6 +36,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+kapt {
+    generateStubs = true
 }
 
 dependencies {
@@ -50,7 +61,10 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-jackson:2.2.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+    compile "android.arch.persistence.room:runtime:1.0.0-alpha1"
+    compile "android.arch.persistence.room:rxjava2:1.0.0-alpha1"
 
+    kapt "android.arch.persistence.room:compiler:1.0.0-alpha1"
     kapt 'com.google.dagger:dagger-compiler:2.10'
     kapt "com.jakewharton:butterknife-compiler:$butterknife_version"
 

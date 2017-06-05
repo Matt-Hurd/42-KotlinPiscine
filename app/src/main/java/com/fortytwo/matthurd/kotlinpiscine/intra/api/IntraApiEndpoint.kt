@@ -10,6 +10,7 @@ import retrofit2.http.Path
 
 interface IntraApiEndpoint {
 
+
     @POST("oauth/token")
     fun authenticate(@Body params: Map<String, String>): Flowable<IntraAccessToken>
 

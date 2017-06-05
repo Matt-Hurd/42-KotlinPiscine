@@ -1,5 +1,6 @@
 package com.fortytwo.matthurd.kotlinpiscine.intra.api.dagger
 
+import android.content.Context
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServerConfig
 import dagger.Module
@@ -7,10 +8,10 @@ import dagger.Provides
 import javax.inject.Singleton
 
 @Module
-class IntraApiModule(internal var config: IntraApiServerConfig) {
+class IntraApiModule(internal var config: IntraApiServerConfig, internal var context: Context) {
     @Provides
     @Singleton
     internal fun provideIntraApiServer(): IntraApiServer {
-        return IntraApiServer(config)
+        return IntraApiServer(config, context)
     }
 }

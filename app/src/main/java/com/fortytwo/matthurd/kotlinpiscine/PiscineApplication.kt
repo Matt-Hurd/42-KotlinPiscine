@@ -13,7 +13,7 @@ class PiscineApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         piscineComponent = DaggerPiscineComponent.builder()
-                .intraApiModule(IntraApiModule(createIntraApiServerConfig()))
+                .intraApiModule(IntraApiModule(createIntraApiServerConfig(), baseContext))
                 .build()
     }
 

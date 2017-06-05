@@ -1,0 +1,102 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "5fa6a81a555c97a399d26f3bfd39bef1",
+    "entities": [
+      {
+        "tableName": "IntraUser",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `email` TEXT, `login` TEXT, `first_name` TEXT, `last_name` TEXT, `url` TEXT, `phone` TEXT, `displayname` TEXT, `image_url` TEXT, `staff` INTEGER, `correction_point` INTEGER, `pool_month` TEXT, `pool_year` TEXT, `location` TEXT, `wallet` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "login",
+            "columnName": "login",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "firstName",
+            "columnName": "first_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastName",
+            "columnName": "last_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "displayname",
+            "columnName": "displayname",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imageUrl",
+            "columnName": "image_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "staff",
+            "columnName": "staff",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "correctionPoint",
+            "columnName": "correction_point",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "poolMonth",
+            "columnName": "pool_month",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "poolYear",
+            "columnName": "pool_year",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "wallet",
+            "columnName": "wallet",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"5fa6a81a555c97a399d26f3bfd39bef1\")"
+    ]
+  }
+}
