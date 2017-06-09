@@ -17,6 +17,6 @@ interface IntraApiEndpoint {
     @GET("v2/users/{id}")
     fun getUser(@Path("id") id: String): Flowable<IntraUser>
 
-    @GET("v2/projects/{id}/projects")
-    fun getProject(@Path("id") id: Int): Flowable<List<IntraProject>>
+    @GET("v2/projects/{id}")
+    fun getProject(@Path("id") id: Int): Flowable<IntraProject>
 }

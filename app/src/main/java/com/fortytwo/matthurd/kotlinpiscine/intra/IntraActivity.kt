@@ -14,9 +14,12 @@ import com.fortytwo.matthurd.kotlinpiscine.intra.api.IntraApiServer
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraProject
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraProjectUser
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraUser
+import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import org.reactivestreams.Subscriber
+import org.reactivestreams.Subscription
 import javax.inject.Inject
 
 class IntraActivity : AppCompatActivity() {
@@ -38,9 +41,12 @@ class IntraActivity : AppCompatActivity() {
     fun searchForUser() {
         val userData = mIntraApiServer
                 .realm
-                .where(IntraUser::class.java)
-                .equalTo("login", nameField.text.toString())
-                .findFirst()
+                .copyFromRealm(
+                        mIntraApiServer
+                                .realm
+                                .where(IntraUser::class.java)
+                                .equalTo("login", nameField.text.toString())
+                                .findFirst())
 
         if (userData != null) {
             loadProjects(userData)
@@ -59,55 +65,148 @@ class IntraActivity : AppCompatActivity() {
                             },
                             onNext = {
                                 userData ->
-                                mIntraApiServer.realm.beginTransaction()
-                                mIntraApiServer.realm.copyToRealmOrUpdate(userData)
-                                mIntraApiServer.realm.commitTransaction()
+                                mIntraApiServer.realm.executeTransactionAsync(
+                                        { realm ->
+                                            try {
+                                                realm.copyToRealmOrUpdate(userData)
+                                            } catch (e: java.io.IOException) {
+                                                Log.e("IntraRealm", "Error when writing userData to realm: %s", e)
+                                            }
+                                        })
                                 userCard.setUserData(userData)
                                 loadProjects(userData)
                             })
         }
     }
 
-    fun loadProjects(intraUser: IntraUser) {
-        intraUser.projectsUsers
-                ?.filterNotNull()
-                ?.forEach { projectUser -> loadProject(projectUser) }
+    fun getProjectsFromCaches(intraUser: IntraUser): Pair<List<IntraProject>, List<Int>> {
+        val cachedProjects =
+                mIntraApiServer
+                        .realm
+                        .copyFromRealm(
+                                mIntraApiServer
+                                        .realm
+                                        .where(IntraProject::class.java)
+                                        .`in`("id", intraUser.projectsUsers?.map { project -> project?.project?.id }?.toTypedArray())
+                                        .findAllAsync())
+                        ?.filter { projectUser -> projectUser?.tier != null } ?: listOf()
+
+        val neededProjects =
+                intraUser
+                        .projectsUsers
+                        ?.filter {
+                            projectUser ->
+                            projectUser?.project?.id !in cachedProjects.map { cached -> cached.id }
+                        }
+                        ?.map { projectUser -> projectUser?.project?.id }
+                        ?.filterNotNull() ?: listOf()
+        return Pair(cachedProjects, neededProjects)
     }
 
-    fun loadProject(intraProjectUser: IntraProjectUser)
-    {
-        if (intraProjectUser.project == null)
-            return
-        val projectData = mIntraApiServer
-                .realm
-                .where(IntraProject::class.java)
-                .equalTo("id", intraProjectUser.project?.id )
-                .findFirst()
+    fun loadProjects(intraUser: IntraUser) {
+        getProjectsFromCaches(intraUser)
 
-        if (projectData != null && projectData.tier != null) {
-            Log.i("ayy cache", projectData.name)
-            return //saved
-        } else {
-            mIntraApiServer
-                    .apiServer
-                    .getProject(intraProjectUser.project?.id ?: -1)
-                    .doOnError { throwable -> Log.w("retrofit", throwable.message) }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy(
-                            onError = { throwable ->
-                                Log.w("retrofit", throwable)
-                                userCard.handleInvalidUser()
-                            },
-                            onNext = {
-                                projectData ->
-                                mIntraApiServer.realm.beginTransaction()
-                                mIntraApiServer.realm.copyToRealmOrUpdate(projectData.first())
-                                mIntraApiServer.realm.commitTransaction()
-                                Log.i("ayy", projectData.first().name) //we loaded it
-                            })
+        var b = object : Subscriber<List<IntraProject>> {
+            override fun onNext(intraProject: List<IntraProject>) {
+                mIntraApiServer.realm.executeTransactionAsync(
+                        { realm ->
+                            try {
+                                realm.copyToRealmOrUpdate(intraProject)
+                            } catch (e: java.io.IOException) {
+                                Log.e("IntraRealm", "Error when writing projects to realm: %s", e)
+                            }
+                        })
+            }
+
+            override fun onComplete() {}
+
+            override fun onError(t: Throwable?) {
+                Log.w("retrofit", t?.message)
+            }
+
+            override fun onSubscribe(s: Subscription?) {}
         }
 
+        val a = intraUser.projectsUsers
+                ?.filterNotNull()
+                ?.map { projectUser -> getProjectAsFlowable(projectUser) }
+
+        Flowable.zip(a, { a -> a })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(
+                        onError = { throwable ->
+                            Log.w("retrofit", throwable)
+                            userCard.handleInvalidUser()
+                        },
+                        onNext = {
+                            projects ->
+                            mIntraApiServer.realm.executeTransactionAsync(
+                                    { realm ->
+                                        try {
+                                            realm.copyToRealmOrUpdate(projects.toList() as List<IntraProject>)
+                                        } catch (e: java.io.IOException) {
+                                            Log.e("IntraRealm", "Error when writing projects to realm: %s", e)
+                                        }
+                                    })
+                        })
+//                .subscribe(b)
 
     }
+
+    fun getProjectAsFlowable(intraProjectUser: IntraProjectUser): Flowable<IntraProject> {
+        val projectData = mIntraApiServer
+                .realm
+                .copyFromRealm(
+                        mIntraApiServer
+                                .realm
+                                .where(IntraProject::class.java)
+                                .equalTo("id", intraProjectUser.project?.id)
+                                .findFirst())
+
+        if (projectData != null && projectData.tier != null) {
+            Log.i("Loading Cached Project", projectData.name)
+            return Flowable.fromArray(projectData)
+        }
+        return mIntraApiServer
+                .apiServer
+                .getProject(intraProjectUser.project?.id ?: -1)
+    }
+
+//    fun loadProject(intraProjectUser: IntraProjectUser)
+//    {
+//        if (intraProjectUser.project == null)
+//            return
+//        val projectData = mIntraApiServer
+//                .realm
+//                .where(IntraProject::class.java)
+//                .equalTo("id", intraProjectUser.project?.id )
+//                .findFirst()
+//
+//        if (projectData != null && projectData.tier != null) {
+//            Log.i("Loading Cached Project", projectData.name)
+//            return //saved
+//        } else {
+//            mIntraApiServer
+//                    .apiServer
+//                    .getProject(intraProjectUser.project?.id ?: -1)
+//                    .doOnError { throwable -> Log.w("retrofit", throwable.message) }
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribeBy(
+//                            onError = { throwable ->
+//                                Log.w("retrofit", throwable)
+//                                userCard.handleInvalidUser()
+//                            },
+//                            onNext = {
+//                                projectData ->
+//                                mIntraApiServer.realm.beginTransaction()
+//                                mIntraApiServer.realm.copyToRealmOrUpdate(projectData.first())
+//                                mIntraApiServer.realm.commitTransaction()
+//                                Log.i("Receiving Project", projectData.first().name) //we loaded it
+//                            })
+//        }
+//
+
 }
+
