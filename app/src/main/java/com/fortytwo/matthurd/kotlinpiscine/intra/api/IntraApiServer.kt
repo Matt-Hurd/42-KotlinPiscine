@@ -2,10 +2,7 @@ package com.fortytwo.matthurd.kotlinpiscine.intra.api
 
 import android.util.Log
 import com.fortytwo.matthurd.kotlinpiscine.intra.api.models.IntraAccessToken
-import com.google.gson.ExclusionStrategy
-import com.google.gson.FieldAttributes
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
+import com.google.gson.*
 import io.reactivex.rxkotlin.blockingSubscribeBy
 import retrofit2.Retrofit
 import io.reactivex.schedulers.Schedulers
@@ -27,6 +24,18 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
     var realm: Realm = Realm.getDefaultInstance()
 
     init {
+        val okHttpClient = createOkHttpInstance(config, authEnabled)
+        val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
+        apiServer = Retrofit.Builder()
+                .baseUrl(config.baseUrl)
+                .addConverterFactory(GsonConverterFactory.create(createGsonInstance()))
+                .addCallAdapterFactory(rxAdapter)
+                .client(okHttpClient)
+                .build()
+                .create(IntraApiEndpoint::class.java)
+    }
+
+    private fun createOkHttpInstance(config: IntraApiServerConfig, authEnabled: Boolean): OkHttpClient {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BODY
         val okHttpClient = OkHttpClient()
@@ -37,25 +46,21 @@ class IntraApiServer(config: IntraApiServerConfig, authEnabled: Boolean = true) 
         if (authEnabled) {
             okHttpClient.authenticator(IntraTokenAuthenticator(config, IntraApiServer(config, false)))
         }
-        val rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())
-        val gson = GsonBuilder()
+        return okHttpClient.build()
+    }
+
+    private fun createGsonInstance(): Gson {
+        return GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .setExclusionStrategies(object : ExclusionStrategy {
-            override fun shouldSkipField(f: FieldAttributes): Boolean {
-                return f.declaringClass == RealmObject::class.java
-            }
+                    override fun shouldSkipField(f: FieldAttributes): Boolean {
+                        return f.declaringClass == RealmObject::class.java
+                    }
 
-            override fun shouldSkipClass(clazz: Class<*>?): Boolean {
-                return false
-            }
-        }).create()
-        apiServer = Retrofit.Builder()
-                .baseUrl(config.baseUrl)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(rxAdapter)
-                .client(okHttpClient.build())
-                .build()
-                .create(IntraApiEndpoint::class.java)
+                    override fun shouldSkipClass(clazz: Class<*>?): Boolean {
+                        return false
+                    }
+                }).create()
     }
 }
 

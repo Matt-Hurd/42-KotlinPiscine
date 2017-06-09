@@ -39,16 +39,16 @@ class IntraActivity : AppCompatActivity() {
 
     @OnClick(R.id.search_button)
     fun searchForUser() {
-        val userData = mIntraApiServer
-                .realm
-                .copyFromRealm(
-                        mIntraApiServer
-                                .realm
-                                .where(IntraUser::class.java)
-                                .equalTo("login", nameField.text.toString())
-                                .findFirst())
-
-        if (userData != null) {
+        val realmUser =
+                mIntraApiServer
+                        .realm
+                        .where(IntraUser::class.java)
+                        .equalTo("login", nameField.text.toString())
+                        .findFirstAsync()
+        if (realmUser != null && realmUser.isValid) {
+            val userData = mIntraApiServer
+                    .realm
+                    .copyFromRealm(realmUser)
             loadProjects(userData)
             userCard.setUserData(userData)
         } else {
@@ -80,16 +80,20 @@ class IntraActivity : AppCompatActivity() {
     }
 
     fun getProjectsFromCaches(intraUser: IntraUser): Pair<List<IntraProject>, List<Int>> {
-        val cachedProjects =
+        val realmProjects = mIntraApiServer
+                .realm
+                .where(IntraProject::class.java)
+                .`in`("id", intraUser.projectsUsers?.map { project -> project?.project?.id }?.toTypedArray())
+                .findAllAsync()
+
+        val cachedProjects = when (realmProjects != null && realmProjects.isValid) {
+            true ->
                 mIntraApiServer
                         .realm
-                        .copyFromRealm(
-                                mIntraApiServer
-                                        .realm
-                                        .where(IntraProject::class.java)
-                                        .`in`("id", intraUser.projectsUsers?.map { project -> project?.project?.id }?.toTypedArray())
-                                        .findAllAsync())
+                        .copyFromRealm(realmProjects)
                         ?.filter { projectUser -> projectUser?.tier != null } ?: listOf()
+            false -> listOf()
+        }
 
         val neededProjects =
                 intraUser
@@ -172,41 +176,5 @@ class IntraActivity : AppCompatActivity() {
                 .apiServer
                 .getProject(intraProjectUser.project?.id ?: -1)
     }
-
-//    fun loadProject(intraProjectUser: IntraProjectUser)
-//    {
-//        if (intraProjectUser.project == null)
-//            return
-//        val projectData = mIntraApiServer
-//                .realm
-//                .where(IntraProject::class.java)
-//                .equalTo("id", intraProjectUser.project?.id )
-//                .findFirst()
-//
-//        if (projectData != null && projectData.tier != null) {
-//            Log.i("Loading Cached Project", projectData.name)
-//            return //saved
-//        } else {
-//            mIntraApiServer
-//                    .apiServer
-//                    .getProject(intraProjectUser.project?.id ?: -1)
-//                    .doOnError { throwable -> Log.w("retrofit", throwable.message) }
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribeBy(
-//                            onError = { throwable ->
-//                                Log.w("retrofit", throwable)
-//                                userCard.handleInvalidUser()
-//                            },
-//                            onNext = {
-//                                projectData ->
-//                                mIntraApiServer.realm.beginTransaction()
-//                                mIntraApiServer.realm.copyToRealmOrUpdate(projectData.first())
-//                                mIntraApiServer.realm.commitTransaction()
-//                                Log.i("Receiving Project", projectData.first().name) //we loaded it
-//                            })
-//        }
-//
-
 }
 
