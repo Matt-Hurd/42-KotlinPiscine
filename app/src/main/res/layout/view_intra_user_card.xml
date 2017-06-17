@@ -65,9 +65,7 @@
     android:id="@+id/projects_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_below="@id/level_progress"
-    android:visibility="gone"
-    tools:visibility="visible">
+    android:layout_below="@id/level_progress">
 
   </android.support.v7.widget.RecyclerView>
 </com.fortytwo.matthurd.kotlinpiscine.intra.IntraUserCard>

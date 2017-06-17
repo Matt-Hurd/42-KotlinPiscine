@@ -2,7 +2,7 @@
   <string name="app_name">Kotlin Piscine</string>
   <string name="search">Search</string>
   <string name="enter_an_intra_login_name">Enter an intra login name</string>
-  <string name="level">Level: %1$.2f</string>
+  <string name="level">Level: %1$s</string>
   <string name="correction_points">Correction Points: %1$d</string>
   <string name="wallet_points">Wallet Points: %1$d₳</string>
 

@@ -44,7 +44,7 @@ class IntraActivity : AppCompatActivity() {
                         .realm
                         .where(IntraUser::class.java)
                         .equalTo("login", nameField.text.toString())
-                        .findFirstAsync()
+                        .findFirst()
         if (realmUser != null && realmUser.isValid) {
             val userData = mIntraApiServer
                     .realm
@@ -159,18 +159,25 @@ class IntraActivity : AppCompatActivity() {
     }
 
     fun getProjectAsFlowable(intraProjectUser: IntraProjectUser): Flowable<IntraProject> {
-        val projectData = mIntraApiServer
+        val project = mIntraApiServer
                 .realm
-                .copyFromRealm(
-                        mIntraApiServer
-                                .realm
-                                .where(IntraProject::class.java)
-                                .equalTo("id", intraProjectUser.project?.id)
-                                .findFirst())
+                .where(IntraProject::class.java)
+                .equalTo("id", intraProjectUser.project?.id)
+                .findFirst()
+        if (project != null) {
+            val projectData = mIntraApiServer
+                    .realm
+                    .copyFromRealm(
+                            mIntraApiServer
+                                    .realm
+                                    .where(IntraProject::class.java)
+                                    .equalTo("id", intraProjectUser.project?.id)
+                                    .findFirst())
 
-        if (projectData != null && projectData.tier != null) {
-            Log.i("Loading Cached Project", projectData.name)
-            return Flowable.fromArray(projectData)
+            if (projectData != null) {
+                Log.i("Loading Cached Project", projectData.name)
+                return Flowable.fromArray(projectData)
+            }
         }
         return mIntraApiServer
                 .apiServer
